@@ -66,17 +66,17 @@ The group the process is running as matches one of the comma-separated regexps i
 
 C<proc-usage.pl /tmp samba:smbd,nmbd web:group=www system:user=root>
 
-This will create 4 files:
+This will create 12 files:
 
 =over
 
-=item /tmp/samba.mrtg
+=item /tmp/samba-cpu.mrtg /tmp/samba-mem.mrtg /tmp/samba-count.mrtg
 
-=item /tmp/web.mrtg
+=item /tmp/web-cpu.mrtg /tmp/web-mem.mrtg /tmp/web-count.mrtg
 
-=item /tmp/system.mrtg
+=item /tmp/system-cpu.mrtg /tmp/system-mem.mrtg /tmp/system-count.mrtg
 
-=item /tmp/OTHER.mrtg
+=item /tmp/OTHER-cpu.mrtg /tmp/OTHER-mem.mrtg /tmp/OTHER-count.mrtg
 
 =back
 
@@ -84,7 +84,8 @@ If you create an MRTG config file with the following command:
 
 C<app-cfgmaker.sh `hostname` samba web system>
 
-Then MRTG will create 8 graphs, cpu and memory for each of the 4 applications.
+Then MRTG will create 12 graphs: cpu, memory and process count
+for each of the 4 applications.
 
 
 =head1 AUTHOR
@@ -123,9 +124,11 @@ my $command = ($target_host eq "" ? "" : "ssh $target_host ").
 my $arg;
 my %cpu_buckets = ( OTHER => 0.0 );
 my %memory_buckets = ( OTHER => 0 );
+my %count_buckets = ( OTHER => 0 );
 my $line;
 my $total_cpu = 0.0;
 my $total_memory = 0;
+my $total_count = 0;
 open(PS,"$command|") || die "Couldn't run $command";
 my $first_line = 1;
 LINE:
@@ -134,18 +137,22 @@ while ($line = <PS>) {
  if ($first_line) { $first_line = 0; next LINE; }
  $line =~ s/^ *//;
  $line =~ s/ *$//;
- my ($ppid,$pcpu,$vsz,$user,$group,$comm) = split(/\s+/,$line);
+ my ($ppid,$pcpu,$vsz,$user,$group,$comm) = split(/\s+/,$line,6);
    # $comm actually gets comm,args
  $vsz *= 1024;
  next LINE if $ppid == 0; # ignore kernel threads
  $total_cpu += $pcpu;
  $total_memory += $vsz;
+ $total_count++;
+ ARGUMENT:
  foreach $arg (@ARGV) {
+   next ARGUMENT unless $arg =~ /:/;
    my ($appname,$selection_rule) = split(/:/,$arg,2);
    if ($selection_rule !~ /=/) { $selection_rule = "comm=".$selection_rule; }
    my ($selector,$required_values) = split(/=/,$selection_rule,2);
    $cpu_buckets{$appname} = 0.0 unless exists $cpu_buckets{$appname};
    $memory_buckets{$appname} = 0.0 unless exists $memory_buckets{$appname};
+   $count_buckets{$appname} = 0 unless exists $count_buckets{$appname};
    my $thing_to_match = $selector =~ /user/i ? $user :
 			$selector =~ /group/i ? $group : $comm;
    my $possible_value;
@@ -153,13 +160,15 @@ while ($line = <PS>) {
      if ($thing_to_match =~ /$possible_value/) {
        $cpu_buckets{$appname} += $pcpu;
        $memory_buckets{$appname} += $vsz;
+       $count_buckets{$appname} += 1;
        next LINE;
      }	
    }
  }
  $cpu_buckets{OTHER} += $pcpu;
  $memory_buckets{OTHER} += $vsz;
- print STDERR "OTHER included process user=$user group=$group comm=$comm\n" 
+ $count_buckets{OTHER} += 1;
+ print STDERR "OTHER included process pcpu=$pcpu vsz=$vsz user=$user group=$group comm=$comm \n" 
    if $show_others;
 }
 close(PS);
@@ -177,12 +186,18 @@ if ($target_host eq "") {
 }
 my $app;
 foreach $app (keys %cpu_buckets) {
-  open(OUT,">$output_dir/${app}-cpu.mrtg") || die "Couldn't write to $output_dir/$app.mrtg";
+  open(OUT,">$output_dir/${app}-cpu.mrtg") || die "Couldn't write to $output_dir/${app}-cpu.mrtg";
   print OUT "$cpu_buckets{$app}\n$total_cpu\n$uptime\n$hostname\n";
   die "The impossible happened for app=$app" if $cpu_buckets{$app} > $total_cpu;
   close(OUT);
-  open(OUT,">$output_dir/${app}-mem.mrtg") || die "Couldn't write to $output_dir/$app.mrtg";
+
+  open(OUT,">$output_dir/${app}-mem.mrtg") || die "Couldn't write to $output_dir/${app}-mem.mrtg";
   print OUT "$memory_buckets{$app}\n$total_memory\n$uptime\n$hostname\n";
   die "The impossible happened for app=$app" if $memory_buckets{$app} > $total_memory;
+  close(OUT);
+
+  open(OUT,">$output_dir/${app}-count.mrtg") || die "Couldn't write to $output_dir/${app}-count.mrtg";
+  print OUT "$count_buckets{$app}\n$total_count\n$uptime\n$hostname\n";
+  die "The impossible happened for app=$app" if $count_buckets{$app} > $total_count;
   close(OUT);
 }

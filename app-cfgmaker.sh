@@ -1,5 +1,9 @@
 #!/bin/sh
-# $Id: app-cfgmaker.sh 357 2009-11-17 06:40:18Z bakerg $
+# $Id: app-cfgmaker.sh 377 2009-11-24 01:25:01Z bakerg $
+
+echo "# This MRTG configuration file generated $(date) by"
+echo "#  $0 $*"
+echo "# "
 
 TARGET_HOST=$1
 shift
@@ -51,6 +55,21 @@ do
   echo "LegendO[${TARGET_HOST}_${app}_mem]: All:"
   echo "WithPeak[${TARGET_HOST}_${app}_mem]: wmy"
 
+  echo "Target[${TARGET_HOST}_${app}_count]: \`cat /aon/mrtg/appdata/${TARGET_HOST}/${app}-count.mrtg\`"
+  echo "MaxBytes[${TARGET_HOST}_${app}_count]: 1000000"
+  echo "Title[${TARGET_HOST}_${app}_count]:  Process count for ${app} on ${TARGET_HOST}"
+  echo "PNGTitle[${TARGET_HOST}_${app}_count]: Process count for ${app} on ${TARGET_HOST}"
+  echo "PageTop[${TARGET_HOST}_${app}_count]: <h1>Process count for ${app} on ${TARGET_HOST}</h1>"
+  echo "Options[${TARGET_HOST}_${app}_count]: growright,gauge,pngdate,printrouter,nopercent,dorelpercent,noo"
+  echo "YLegend[${TARGET_HOST}_${app}_count]: Process count"
+  echo "Legend1[${TARGET_HOST}_${app}_count]: ${app}"
+  echo "Legend2[${TARGET_HOST}_${app}_count]: All on ${TARGET_HOST}"
+  echo "Legend3[${TARGET_HOST}_${app}_count]: Peak process count"
+  echo "Legend4[${TARGET_HOST}_${app}_count]: Peak process count for all on ${TARGET_HOST}"
+  echo "ShortLegend[${TARGET_HOST}_${app}_count]: procs"
+  echo "LegendI[${TARGET_HOST}_${app}_count]: ${app}:"
+  echo "LegendO[${TARGET_HOST}_${app}_count]: All:"
+  echo "WithPeak[${TARGET_HOST}_${app}_count]: wmy"
 done
 
 echo ""
@@ -87,3 +106,18 @@ echo "LegendI[${TARGET_HOST}_OTHER_mem]: OTHER:"
 echo "LegendO[${TARGET_HOST}_OTHER_mem]: All:"
 echo "WithPeak[${TARGET_HOST}_OTHER_mem]: wmy"
 echo ""
+echo "Target[${TARGET_HOST}_OTHER_count]: \`cat /aon/mrtg/appdata/${TARGET_HOST}/OTHER-count.mrtg\`"
+echo "MaxBytes[${TARGET_HOST}_OTHER_count]: 1000000"
+echo "Title[${TARGET_HOST}_OTHER_count]:  Process count for OTHER on ${TARGET_HOST}"
+echo "PNGTitle[${TARGET_HOST}_OTHER_count]: Process count for OTHER on ${TARGET_HOST}"
+echo "PageTop[${TARGET_HOST}_OTHER_count]: <h1>Process count for OTHER on ${TARGET_HOST}</h1>"
+echo "Options[${TARGET_HOST}_OTHER_count]: growright,gauge,pngdate,printrouter,nopercent,dorelpercent,noo"
+echo "YLegend[${TARGET_HOST}_OTHER_count]: Process count"
+echo "Legend1[${TARGET_HOST}_OTHER_count]: OTHER"
+echo "Legend2[${TARGET_HOST}_OTHER_count]: All on ${TARGET_HOST}"
+echo "Legend3[${TARGET_HOST}_OTHER_count]: Peak process count"
+echo "Legend4[${TARGET_HOST}_OTHER_count]: Peak process count for all on ${TARGET_HOST}"
+echo "ShortLegend[${TARGET_HOST}_OTHER_count]: procs"
+echo "LegendI[${TARGET_HOST}_OTHER_count]: OTHER:"
+echo "LegendO[${TARGET_HOST}_OTHER_count]: All:"
+echo "WithPeak[${TARGET_HOST}_OTHER_count]: wmy"
