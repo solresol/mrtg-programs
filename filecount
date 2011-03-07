@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# This connects via ssh to argument 1, to count the number of files under
+# the directory specified by arguments 2 and 3, and prints out the answer in
+# a suitable format for mrtg to use.
+
+COUNT=$(ssh $1 find $2 -type f '|' wc -l)
+echo $COUNT
+if [ "$3" = "" -o "$2" = "$3" ]
+then
+  echo $COUNT
+else
+  ssh $1 find $3 -type f '|' wc -l
+fi
+
+ssh $1 uptime
+
+ssh $1 hostname
+

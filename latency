@@ -1,0 +1,21 @@
+#!/bin/sh
+
+TARGET=$1
+TITLE=$2
+
+
+MIN_AND_MAX=$(/usr/sbin/ping $TARGET -n 3 -m 10 | grep round-trip | cut -d/ -f3,5 | sed 's:max = ::')
+
+MIN=$(echo $MIN_AND_MAX | cut -d/ -f1)
+MAX=$(echo $MIN_AND_MAX | cut -d/ -f2)
+
+if [ "$MIN" = "" -o "$MAX" = "" ]
+then
+  exit 1
+  # something horrible
+fi
+
+echo $MIN
+echo $MAX
+echo 0
+echo $TITLE
